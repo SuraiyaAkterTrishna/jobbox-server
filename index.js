@@ -9,16 +9,12 @@ const cors = require("cors");
 app.use(cors());
 app.use(express.json());
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.q66zrl2.mongodb.net/?retryWrites=true&w=majority`;
-const client = new MongoClient(uri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverApi: ServerApiVersion.v1,
-});
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.3zjplug.mongodb.net/?retryWrites=true&w=majority`;
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 const run = async () => {
   try {
-    const db = client.db("jobbox");
+    const db = client.db("job-box");
     const userCollection = db.collection("user");
     const jobCollection = db.collection("job");
 
@@ -28,6 +24,12 @@ const run = async () => {
       const result = await userCollection.insertOne(user);
 
       res.send(result);
+    });
+
+    app.get("/users", async (req, res) => {
+      const cursor = userCollection.find({});
+      const result = await cursor.toArray();
+      res.send({ status: true, data: result });
     });
 
     app.get("/user/:email", async (req, res) => {
@@ -91,8 +93,6 @@ const run = async () => {
     app.patch("/reply", async (req, res) => {
       const userId = req.body.userId;
       const reply = req.body.reply;
-      console.log(reply);
-      console.log(userId);
 
       const filter = { "queries.id": ObjectId(userId) };
 
@@ -146,6 +146,13 @@ const run = async () => {
 
       res.send({ status: true, data: result });
     });
+
+    app.delete("/job/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await jobCollection.deleteOne(query);
+      res.send(result);
+  });
   } finally {
   }
 };
